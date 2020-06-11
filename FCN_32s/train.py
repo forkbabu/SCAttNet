@@ -12,16 +12,16 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 batch_size=16
-img=tf.placeholder(tf.float32,[batch_size,256,256,3])
-label=tf.placeholder(tf.int32,[batch_size,256,256])
+img=tf.compat.v1.placeholder(tf.float32,[batch_size,256,256,3])
+label=tf.compat.v1.placeholder(tf.int32,[batch_size,256,256])
 pred=VGG16(img)
-cross_entropy_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=label, logits=pred))
+cross_entropy_loss = tf.reduce_mean(input_tensor=tf.nn.sparse_softmax_cross_entropy_with_logits(labels=label, logits=pred))
 global_step=tf.Variable(0,trainable=False)
-lr=tf.train.exponential_decay(0.001,global_step=global_step,decay_steps=1000,decay_rate=0.9)
-train_step = tf.train.AdamOptimizer(learning_rate=lr).minimize(cross_entropy_loss)
+lr=tf.compat.v1.train.exponential_decay(0.001,global_step=global_step,decay_steps=1000,decay_rate=0.9)
+train_step = tf.compat.v1.train.AdamOptimizer(learning_rate=lr).minimize(cross_entropy_loss)
 add_global=global_step.assign_add(1)
 num_batches=12000//batch_size
-saver=tf.train.Saver()
+saver=tf.compat.v1.train.Saver()
 
 def load():
     import re
@@ -40,7 +40,7 @@ def load():
         return False, 0
 
 def train():
-    tf.global_variables_initializer().run()
+    tf.compat.v1.global_variables_initializer().run()
     
     could_load, checkpoint_counter = load()
     if could_load:
@@ -92,6 +92,6 @@ def test():
                 
     
     
-with tf.Session() as sess:
+with tf.compat.v1.Session() as sess:
     train()
     
