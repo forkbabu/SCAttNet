@@ -11,6 +11,8 @@ from scattnet import inference
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+from tensorflow.python.framework.ops import disable_eager_execution
+disable_eager_execution()
 
 batch_size=16
 img=tf.compat.v1.placeholder(tf.float32,[batch_size,256,256,3])
