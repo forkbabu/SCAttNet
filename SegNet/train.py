@@ -12,14 +12,14 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 batch_size=16
-img=tf.placeholder(tf.float32,[batch_size,256,256,3])
-label=tf.placeholder(tf.int32,[batch_size,256,256])
-phase_train = tf.placeholder(tf.bool, name='phase_train')
+img=tf.compat.v1.placeholder(tf.float32,[batch_size,256,256,3])
+label=tf.compat.v1.placeholder(tf.int32,[batch_size,256,256])
+phase_train = tf.compat.v1.placeholder(tf.bool, name='phase_train')
 pred = inference(img,phase_train)
-cross_entropy_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=label, logits=pred))
-train_step = tf.train.AdamOptimizer(learning_rate=0.001).minimize(cross_entropy_loss)
+cross_entropy_loss = tf.reduce_mean(input_tensor=tf.nn.sparse_softmax_cross_entropy_with_logits(labels=label, logits=pred))
+train_step = tf.compat.v1.train.AdamOptimizer(learning_rate=0.001).minimize(cross_entropy_loss)
 num_batches=12000//batch_size
-saver=tf.train.Saver()
+saver=tf.compat.v1.train.Saver()
 
 def load():
     import re
@@ -38,7 +38,7 @@ def load():
         return False, 0
 
 def train():
-    tf.global_variables_initializer().run()  
+    tf.compat.v1.global_variables_initializer().run()  
     could_load, checkpoint_counter = load()
     if could_load:
         start_epoch = (int)(checkpoint_counter / num_batches)
@@ -70,6 +70,6 @@ def train():
 
     
     
-with tf.Session() as sess:
+with tf.compat.v1.Session() as sess:
     train()
     
