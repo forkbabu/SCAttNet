@@ -13,7 +13,7 @@ def print_layer(t):
 
 def conv(x, d_out, name, fineturn=False, xavier=False):
     d_in = x.get_shape()[-1].value
-    with tf.name_scope(name) as scope:
+    with tf.compat.v1.name_scope(name) as scope:
         # Fine-tuning 
         if fineturn:
             '''
@@ -24,32 +24,32 @@ def conv(x, d_out, name, fineturn=False, xavier=False):
             bias = tf.constant(data_dict[name][1], name="bias")
             print "fineturn"
         elif not xavier:
-            kernel = tf.Variable(tf.truncated_normal([3, 3, d_in, d_out], stddev=0.1), name='weights')
+            kernel = tf.Variable(tf.random.truncated_normal([3, 3, d_in, d_out], stddev=0.1), name='weights')
             bias = tf.Variable(tf.constant(0.0, dtype=tf.float32, shape=[d_out]),
                                                 trainable=True, 
                                                 name='bias')
             print "truncated_normal"
         else:
-            kernel = tf.get_variable(scope+'weights', shape=[3, 3, d_in, d_out], 
+            kernel = tf.compat.v1.get_variable(scope+'weights', shape=[3, 3, d_in, d_out], 
                                                 dtype=tf.float32,
-                                                initializer=tf.contrib.layers.xavier_initializer_conv2d())
+                                                initializer=tf.compat.v1.keras.initializers.VarianceScaling(scale=1.0, mode="fan_avg", distribution="uniform"))
             bias = tf.Variable(tf.constant(0.0, dtype=tf.float32, shape=[d_out]),
                                                 trainable=True, 
                                                 name='bias')
             print "xavier"
-        conv = tf.nn.conv2d(x, kernel,[1, 1, 1, 1], padding='SAME')
+        conv = tf.nn.conv2d(input=x, filters=kernel,strides=[1, 1, 1, 1], padding='SAME')
         activation = tf.nn.relu(conv + bias, name=scope)
         print_layer(activation)
         return activation
 
 def maxpool(x, name):
-    activation = tf.nn.max_pool(x, [1, 2, 2, 1], [1, 2, 2, 1], padding='VALID', name=name) 
+    activation = tf.nn.max_pool2d(input=x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID', name=name) 
     print_layer(activation)
     return activation
 
 def fc(x, n_out, name, fineturn=False, xavier=False):
     n_in = x.get_shape()[-1].value
-    with tf.name_scope(name) as scope:
+    with tf.compat.v1.name_scope(name) as scope:
         if fineturn:
             '''
             weight = tf.Variable(tf.constant(data_dict[name][0]), name="weights")
@@ -59,31 +59,31 @@ def fc(x, n_out, name, fineturn=False, xavier=False):
             bias = tf.constant(data_dict[name][1], name="bias")
             print "fineturn"
         elif not xavier:
-            weight = tf.Variable(tf.truncated_normal([n_in, n_out], stddev=0.01), name='weights')
+            weight = tf.Variable(tf.random.truncated_normal([n_in, n_out], stddev=0.01), name='weights')
             bias = tf.Variable(tf.constant(0.1, dtype=tf.float32, shape=[n_out]), 
                                                 trainable=True, 
                                                 name='bias')
             print "truncated_normal"
         else:
-            weight = tf.get_variable(scope+'weights', shape=[n_in, n_out], 
+            weight = tf.compat.v1.get_variable(scope+'weights', shape=[n_in, n_out], 
                                                 dtype=tf.float32,
-                                                initializer=tf.contrib.layers.xavier_initializer_conv2d())
+                                                initializer=tf.compat.v1.keras.initializers.VarianceScaling(scale=1.0, mode="fan_avg", distribution="uniform"))
             bias = tf.Variable(tf.constant(0.1, dtype=tf.float32, shape=[n_out]), 
                                                 trainable=True, 
                                                 name='bias')
             print "xavier"
         # 全连接层可以使用relu_layer函数比较方便，不用像卷积层使用relu函数
-        activation = tf.nn.relu_layer(x, weight, bias, name=name)
+        activation = tf.compat.v1.nn.relu_layer(x, weight, bias, name=name)
         print_layer(activation)
         return activation
 
 def weight_variable(shape, stddev=0.02, name=None):
     # print(shape)
-    initial = tf.truncated_normal(shape, stddev=stddev)
+    initial = tf.random.truncated_normal(shape, stddev=stddev)
     if name is None:
         return tf.Variable(initial)
     else:
-        return tf.get_variable(name, initializer=initial)
+        return tf.compat.v1.get_variable(name, initializer=initial)
 
 
 def bias_variable(shape, name=None):
@@ -91,10 +91,10 @@ def bias_variable(shape, name=None):
     if name is None:
         return tf.Variable(initial)
     else:
-        return tf.get_variable(name, initializer=initial)
+        return tf.compat.v1.get_variable(name, initializer=initial)
 
 def conv2d_basic(x, W, bias):
-    conv = tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding="SAME")
+    conv = tf.nn.conv2d(input=x, filters=W, strides=[1, 1, 1, 1], padding="SAME")
     return tf.nn.bias_add(conv, bias)
 
 def conv2d_transpose_strided(x, W, b, output_shape=None, stride = 2):
@@ -156,23 +156,23 @@ def VGG16(images):
     deconv_shape1 = pool4.get_shape()
     W_t1 = weight_variable([4, 4, deconv_shape1[3].value, 6], name="W_t1")
     b_t1 = bias_variable([deconv_shape1[3].value], name="b_t1")
-    conv_t1 = conv2d_transpose_strided(conv8, W_t1, b_t1, output_shape=tf.shape(pool4))                                           
+    conv_t1 = conv2d_transpose_strided(conv8, W_t1, b_t1, output_shape=tf.shape(input=pool4))                                           
     fuse_1 = tf.add(conv_t1, pool4, name="fuse_1")
 
     deconv_shape2 = pool3.get_shape()
     W_t2 = weight_variable([4, 4, deconv_shape2[3].value, deconv_shape1[3].value], name="W_t2")
     b_t2 = bias_variable([deconv_shape2[3].value], name="b_t2")
-    conv_t2 = conv2d_transpose_strided(fuse_1, W_t2, b_t2, output_shape=tf.shape(pool3))
+    conv_t2 = conv2d_transpose_strided(fuse_1, W_t2, b_t2, output_shape=tf.shape(input=pool3))
     fuse_2 = tf.add(conv_t2, pool3, name="fuse_2")
 
 
-    shape = tf.shape(images)
+    shape = tf.shape(input=images)
     deconv_shape3 = tf.stack([shape[0], shape[1], shape[2], 6])
     W_t3 = weight_variable([16, 16, 6, deconv_shape2[3].value], name="W_t3")
     b_t3 = bias_variable([6], name="b_t3")
     conv_t3 = conv2d_transpose_strided(fuse_2, W_t3, b_t3, output_shape=deconv_shape3, stride=8)
 
-    annotation_pred = tf.argmax(conv_t3, dimension=3, name="prediction")
+    annotation_pred = tf.argmax(input=conv_t3, axis=3, name="prediction")
     
    
     return conv_t3
