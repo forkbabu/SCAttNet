@@ -4,6 +4,7 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow.python.training import moving_averages
+tf.compat.v1.disable_resource_variables()
 
 
 def xavier_initializer(uniform=True, seed=None, dtype=tf.float32):
