@@ -13,13 +13,13 @@ import numpy as np
 import glob
 import scipy
 batch_size=1
-img=tf.placeholder(tf.float32,[batch_size,256,256,3])
+img=tf.compat.v1.placeholder(tf.float32,[batch_size,256,256,3])
 test_img=sorted(glob.glob('./dataset/test/34/*.png'))
 pred = VGG16(img)
 
-saver=tf.train.Saver()
+saver=tf.compat.v1.train.Saver()
 def save():
-    tf.global_variables_initializer().run()
+    tf.compat.v1.global_variables_initializer().run()
     checkpoint_dir = './checkpoint/'
     ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
     if ckpt and ckpt.model_checkpoint_path:
@@ -39,7 +39,7 @@ def save():
 
 def vis():
     
-    tf.global_variables_initializer().run()
+    tf.compat.v1.global_variables_initializer().run()
     checkpoint_dir = './checkpoint/'
     ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
     if ckpt and ckpt.model_checkpoint_path:
@@ -64,6 +64,6 @@ def vis():
 
                 plt.imshow(predict)
                 plt.show()
-with tf.Session() as sess:
+with tf.compat.v1.Session() as sess:
     save()
    # vis()
