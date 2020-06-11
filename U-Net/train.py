@@ -12,20 +12,20 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 batch_size=16
-img=tf.placeholder(tf.float32,[batch_size,256,256,3])
-label=tf.placeholder(tf.int32,[batch_size,256,256])
+img=tf.compat.v1.placeholder(tf.float32,[batch_size,256,256,3])
+label=tf.compat.v1.placeholder(tf.int32,[batch_size,256,256])
 
 
 
 
 pred = unet_model(img)
-update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+update_ops = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.UPDATE_OPS)
 with tf.control_dependencies(update_ops):
-    cross_entropy_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=label, logits=pred))
+    cross_entropy_loss = tf.reduce_mean(input_tensor=tf.nn.sparse_softmax_cross_entropy_with_logits(labels=label, logits=pred))
 #cross_entropy_loss=-tf.reduce_mean((label*tf.log(pred)+(1-label)*tf.log(1-pred)))
-    train_step = tf.train.AdamOptimizer(learning_rate=1e-3).minimize(cross_entropy_loss)
+    train_step = tf.compat.v1.train.AdamOptimizer(learning_rate=1e-3).minimize(cross_entropy_loss)
 num_batches=12000//batch_size
-saver=tf.train.Saver(var_list=tf.global_variables())
+saver=tf.compat.v1.train.Saver(var_list=tf.compat.v1.global_variables())
 
 def load():
     import re
@@ -44,7 +44,7 @@ def load():
         return False, 0
 
 def train():
-    tf.global_variables_initializer().run()
+    tf.compat.v1.global_variables_initializer().run()
     
     could_load, checkpoint_counter = load()
     if could_load:
@@ -75,6 +75,6 @@ def train():
         start_batch_id=0
         saver.save(sess,'./checkpoint/unet.ckpt',global_step=counter)
 
-with tf.Session() as sess:
+with tf.compat.v1.Session() as sess:
     train()
     
